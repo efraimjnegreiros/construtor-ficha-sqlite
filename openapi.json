@@ -1,0 +1,5722 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/health/live": {
+      "get": {
+        "operationId": "HealthController_live",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "status": "live"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Liveness health check",
+        "tags": [
+          "health"
+        ]
+      }
+    },
+    "/health/ready": {
+      "get": {
+        "operationId": "HealthController_ready",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "status": "ready",
+                    "checks": {
+                      "database": "up"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Readiness health check incluindo conectividade com banco",
+        "tags": [
+          "health"
+        ]
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "operationId": "AuthController_directLogin",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Autenticação concluída e sessão local criada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthMeResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados de entrada inválidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Credenciais incorretas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Autenticar com credenciais de forma direta (inicia sessão segura)",
+        "tags": [
+          "auth"
+        ]
+      },
+      "get": {
+        "operationId": "AuthController_login",
+        "parameters": [
+          {
+            "name": "returnTo",
+            "required": false,
+            "in": "query",
+            "description": "Caminho seguro de retorno após login",
+            "schema": {}
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "Redirecionamento para tela de login do provedor"
+          }
+        },
+        "summary": "Iniciar autenticação OIDC (redireciona para o provedor)",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/callback": {
+      "get": {
+        "operationId": "AuthController_callback",
+        "parameters": [
+          {
+            "name": "error",
+            "required": false,
+            "in": "query",
+            "schema": {}
+          },
+          {
+            "name": "state",
+            "required": false,
+            "in": "query",
+            "schema": {}
+          },
+          {
+            "name": "code",
+            "required": false,
+            "in": "query",
+            "schema": {}
+          }
+        ],
+        "responses": {
+          "303": {
+            "description": "Redirecionamento para a rota solicitada no frontend"
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Receber callback OIDC e criar sessão local em cookie",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/me": {
+      "get": {
+        "operationId": "AuthController_me",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthMeResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "appstart_session": []
+          }
+        ],
+        "summary": "Consultar perfil do usuário autenticado atual",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "operationId": "AuthController_logout",
+        "parameters": [],
+        "responses": {
+          "303": {
+            "description": "Redirecionamento para logout federado ou aplicação"
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "appstart_session": []
+          }
+        ],
+        "summary": "Encerrar sessão atual e executar logout federado",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/logout-all": {
+      "post": {
+        "operationId": "AuthController_logoutAll",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": "Todas as sessões encerradas com sucesso"
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "appstart_session": []
+          }
+        ],
+        "summary": "Encerrar todas as sessões locais ativas do usuário",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/account": {
+      "get": {
+        "operationId": "AuthController_account",
+        "parameters": [],
+        "responses": {
+          "302": {
+            "description": "Redirecionamento para painel de gerenciamento"
+          }
+        },
+        "security": [
+          {
+            "appstart_session": []
+          }
+        ],
+        "summary": "Redirecionar para gerenciamento central de conta",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/admin/access-check": {
+      "get": {
+        "operationId": "AdminAccessController_check",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "AdminAccess"
+        ]
+      }
+    },
+    "/api/v1/users": {
+      "get": {
+        "operationId": "UserController_list",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Número da página",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "description": "Itens por página",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Termo de busca",
+            "schema": {
+              "maxLength": 120,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedUsersResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "appstart_session": []
+          }
+        ],
+        "summary": "Listar usuários com paginação e busca (ADMIN)",
+        "tags": [
+          "users"
+        ]
+      },
+      "post": {
+        "operationId": "UserController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManagedUserDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "appstart_session": []
+          }
+        ],
+        "summary": "Criar usuário e provisionar perfil (ADMIN)",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/api/v1/users/me": {
+      "patch": {
+        "operationId": "UserController_updateMe",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSelfUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManagedUserDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "appstart_session": []
+          }
+        ],
+        "summary": "Atualizar dados permitidos do próprio perfil",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/api/v1/users/{id}": {
+      "get": {
+        "operationId": "UserController_getById",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManagedUserDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "appstart_session": []
+          }
+        ],
+        "summary": "Obter detalhes de um usuário por ID (ADMIN)",
+        "tags": [
+          "users"
+        ]
+      },
+      "patch": {
+        "operationId": "UserController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManagedUserDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "appstart_session": []
+          }
+        ],
+        "summary": "Atualizar usuário e sincronizar perfil (ADMIN)",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/api/v1/users/{id}/status": {
+      "patch": {
+        "operationId": "UserController_setStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetUserStatusDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManagedUserDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "appstart_session": []
+          }
+        ],
+        "summary": "Ativar ou desativar usuário (ADMIN)",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/api/v1/tasks": {
+      "post": {
+        "description": "Cria uma nova tarefa associando-a ao usuário autenticado como proprietário.",
+        "operationId": "TasksController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTaskDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Tarefa criada com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos ou data limite no passado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Criar nova tarefa",
+        "tags": [
+          "tasks"
+        ]
+      },
+      "get": {
+        "description": "Lista tarefas com paginação, busca por texto, filtro por status/prioridade e ordenação.",
+        "operationId": "TasksController_findAll",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Número da página",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "description": "Itens por página",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Termo de busca",
+            "schema": {
+              "maxLength": 120,
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "description": "Filtro por status",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PENDING",
+                "IN_PROGRESS",
+                "COMPLETED",
+                "CANCELLED"
+              ]
+            }
+          },
+          {
+            "name": "priority",
+            "required": false,
+            "in": "query",
+            "description": "Filtro por prioridade",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "LOW",
+                "MEDIUM",
+                "HIGH",
+                "URGENT"
+              ]
+            }
+          },
+          {
+            "name": "categoryId",
+            "required": false,
+            "in": "query",
+            "description": "Filtro por categoria",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "description": "Campo de ordenação",
+            "schema": {
+              "default": "createdAt",
+              "type": "string",
+              "enum": [
+                "createdAt",
+                "dueDate",
+                "title",
+                "priority",
+                "status"
+              ]
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "description": "Direção da ordenação",
+            "schema": {
+              "default": "desc",
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista paginada de tarefas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedTasksResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Listar tarefas paginadas",
+        "tags": [
+          "tasks"
+        ]
+      }
+    },
+    "/api/v1/tasks/{id}": {
+      "get": {
+        "description": "Retorna os detalhes de uma tarefa específica pertencente ao usuário (ou qualquer tarefa para ADMIN).",
+        "operationId": "TasksController_findById",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Dados da tarefa",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Acesso negado (tarefa de outro proprietário)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Tarefa não encontrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Obter detalhes de uma tarefa",
+        "tags": [
+          "tasks"
+        ]
+      },
+      "put": {
+        "description": "Atualiza os dados ou status de uma tarefa respeitando as regras de negócio e ownership.",
+        "operationId": "TasksController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTaskDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Tarefa atualizada com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos ou alteração inválida em tarefa concluída",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Acesso negado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Tarefa não encontrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Atualizar tarefa",
+        "tags": [
+          "tasks"
+        ]
+      },
+      "delete": {
+        "description": "Realiza a remoção lógica (soft delete) da tarefa.",
+        "operationId": "TasksController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Tarefa excluída com sucesso"
+          },
+          "401": {
+            "description": "Não autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Acesso negado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Tarefa não encontrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Excluir tarefa (remoção lógica)",
+        "tags": [
+          "tasks"
+        ]
+      }
+    },
+    "/api/v1/categories": {
+      "post": {
+        "description": "Cria uma categoria de tarefas associada ao usuário autenticado.",
+        "operationId": "CategoriesController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCategoryDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Categoria criada com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Já existe categoria com este nome",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Criar nova categoria",
+        "tags": [
+          "categories"
+        ]
+      },
+      "get": {
+        "description": "Lista categorias com paginação e busca por nome.",
+        "operationId": "CategoriesController_findAll",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Número da página",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "description": "Itens por página",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Termo de busca",
+            "schema": {
+              "maxLength": 120,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista paginada de categorias",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedCategoriesResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Listar categorias paginadas",
+        "tags": [
+          "categories"
+        ]
+      }
+    },
+    "/api/v1/categories/{id}": {
+      "get": {
+        "description": "Retorna uma categoria do usuário (ou qualquer categoria para ADMIN).",
+        "operationId": "CategoriesController_findById",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Dados da categoria",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Acesso negado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Categoria não encontrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Obter detalhes de uma categoria",
+        "tags": [
+          "categories"
+        ]
+      },
+      "put": {
+        "description": "Atualiza nome e/ou cor de uma categoria respeitando ownership.",
+        "operationId": "CategoriesController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCategoryDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Categoria atualizada com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Acesso negado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Categoria não encontrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Já existe categoria com este nome",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Atualizar categoria",
+        "tags": [
+          "categories"
+        ]
+      },
+      "delete": {
+        "description": "Remove logicamente a categoria. As tarefas vinculadas ficam sem categoria.",
+        "operationId": "CategoriesController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Categoria excluída com sucesso"
+          },
+          "401": {
+            "description": "Não autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Acesso negado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Categoria não encontrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Excluir categoria (remoção lógica)",
+        "tags": [
+          "categories"
+        ]
+      }
+    },
+    "/api/v1/form-access/me": {
+      "get": {
+        "description": "Útil para o frontend decidir o que exibir. A autorização real é sempre feita na API.",
+        "operationId": "FormAccessController_me",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormAccessProfileDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Perfis e permissões do construtor para o usuário atual",
+        "tags": [
+          "form-access"
+        ]
+      }
+    },
+    "/api/v1/prontuario/status": {
+      "get": {
+        "operationId": "ProntuarioController_status",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProntuarioStatusDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Estado da integração com o prontuário",
+        "tags": [
+          "prontuario"
+        ]
+      }
+    },
+    "/api/v1/prontuario/pacientes/{pacienteId}": {
+      "get": {
+        "operationId": "ProntuarioController_findPaciente",
+        "parameters": [
+          {
+            "name": "pacienteId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PacienteResumoDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Acesso negado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Paciente não encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Prontuário indisponível",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Resumo de um paciente no prontuário",
+        "tags": [
+          "prontuario"
+        ]
+      }
+    },
+    "/api/v1/form-templates": {
+      "post": {
+        "description": "Cadastra a ficha (código FC-xxxx gerado, área, SIGTAP, responsável...) em RASCUNHO; o criador vira o dono.",
+        "operationId": "FormTemplatesController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateFormTemplateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormTemplateDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Perfil sem permissão",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Já existe modelo com este nome",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Prontuário indisponível",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Cadastrar modelo de ficha",
+        "tags": [
+          "form-templates"
+        ]
+      },
+      "get": {
+        "description": "Configurador vê os seus; Supervisão vê todos. Filtros: busca (nome/código), status, área, SIGTAP e responsável.",
+        "operationId": "FormTemplatesController_findAll",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Número da página",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "description": "Itens por página",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Termo de busca",
+            "schema": {
+              "maxLength": 120,
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/FormTemplateStatus"
+            }
+          },
+          {
+            "name": "clinicalArea",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/ClinicalArea"
+            }
+          },
+          {
+            "name": "sigtapCode",
+            "required": false,
+            "in": "query",
+            "description": "Filtra por código SIGTAP (contém)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "responsible",
+            "required": false,
+            "in": "query",
+            "description": "Filtra por responsável (contém)",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedFormTemplatesResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Perfil sem permissão",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Prontuário indisponível",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Listar modelos de ficha",
+        "tags": [
+          "form-templates"
+        ]
+      }
+    },
+    "/api/v1/form-templates/{id}": {
+      "get": {
+        "description": "Inclui o histórico de versões.",
+        "operationId": "FormTemplatesController_findById",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormTemplateDetailDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Acesso negado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Modelo não encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Prontuário indisponível",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Obter modelo de ficha",
+        "tags": [
+          "form-templates"
+        ]
+      },
+      "put": {
+        "description": "Somente em RASCUNHO. Cada edição incrementa o PATCH da versão e entra no histórico.",
+        "operationId": "FormTemplatesController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateFormTemplateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormTemplateDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Acesso negado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Modelo não encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Nome duplicado ou modelo fora de Rascunho",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Prontuário indisponível",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Atualizar cadastro do modelo",
+        "tags": [
+          "form-templates"
+        ]
+      },
+      "delete": {
+        "description": "Somente em RASCUNHO; nos demais, use Inativar.",
+        "operationId": "FormTemplatesController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Modelo excluído"
+          },
+          "401": {
+            "description": "Não autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Acesso negado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Modelo não encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Modelo fora de Rascunho",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Prontuário indisponível",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Excluir modelo (remoção lógica)",
+        "tags": [
+          "form-templates"
+        ]
+      }
+    },
+    "/api/v1/form-templates/{id}/transitions": {
+      "post": {
+        "description": "ENVIAR_REVISAO (dono) · DEVOLVER, APROVAR, PUBLICAR, SUSPENDER, REATIVAR (Supervisor) · INATIVAR (dono ou Supervisor). Devolver, suspender e inativar exigem justificativa.",
+        "operationId": "FormTemplatesController_transition",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FormTemplateTransitionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormTemplateDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Ação inválida ou justificativa ausente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Perfil sem permissão para a ação",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Modelo não encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Transição não permitida a partir do status atual",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Prontuário indisponível",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Mudar status do modelo (ciclo de vida)",
+        "tags": [
+          "form-templates"
+        ]
+      }
+    },
+    "/api/v1/form-templates/{id}/derive": {
+      "post": {
+        "description": "Copia o cadastro do modelo de origem para um novo RASCUNHO (v1.0.0) com novo código.",
+        "operationId": "FormTemplatesController_derive",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeriveFormTemplateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormTemplateDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Acesso negado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Modelo não encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Já existe modelo com este nome",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Prontuário indisponível",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Derivar novo modelo a partir de um existente",
+        "tags": [
+          "form-templates"
+        ]
+      }
+    },
+    "/api/v1/form-templates/{templateId}/structure": {
+      "get": {
+        "operationId": "FormStructureController_getStructure",
+        "parameters": [
+          {
+            "name": "templateId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormStructureDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Acesso negado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Modelo não encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Estrutura da ficha (seções, grupos e campos)",
+        "tags": [
+          "form-structure"
+        ]
+      }
+    },
+    "/api/v1/form-templates/{templateId}/sections": {
+      "post": {
+        "operationId": "FormStructureController_createSection",
+        "parameters": [
+          {
+            "name": "templateId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateFormSectionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormStructureDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados ou regra de campo inválidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sem permissão ou não é o dono",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Modelo, seção, grupo ou campo não encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Modelo fora de Rascunho, chave duplicada ou campo em uso por outro",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Prontuário indisponível",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Adicionar seção",
+        "tags": [
+          "form-structure"
+        ]
+      }
+    },
+    "/api/v1/form-templates/{templateId}/sections/reorder": {
+      "put": {
+        "operationId": "FormStructureController_reorderSections",
+        "parameters": [
+          {
+            "name": "templateId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReorderDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormStructureDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados ou regra de campo inválidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sem permissão ou não é o dono",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Modelo, seção, grupo ou campo não encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Modelo fora de Rascunho, chave duplicada ou campo em uso por outro",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Prontuário indisponível",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Reordenar seções",
+        "tags": [
+          "form-structure"
+        ]
+      }
+    },
+    "/api/v1/form-templates/{templateId}/sections/{sectionId}": {
+      "put": {
+        "operationId": "FormStructureController_updateSection",
+        "parameters": [
+          {
+            "name": "templateId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sectionId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateFormSectionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormStructureDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados ou regra de campo inválidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sem permissão ou não é o dono",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Modelo, seção, grupo ou campo não encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Modelo fora de Rascunho, chave duplicada ou campo em uso por outro",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Prontuário indisponível",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Renomear/descrever seção",
+        "tags": [
+          "form-structure"
+        ]
+      },
+      "delete": {
+        "operationId": "FormStructureController_removeSection",
+        "parameters": [
+          {
+            "name": "templateId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sectionId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormStructureDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados ou regra de campo inválidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sem permissão ou não é o dono",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Modelo, seção, grupo ou campo não encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Modelo fora de Rascunho, chave duplicada ou campo em uso por outro",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Prontuário indisponível",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Excluir seção (com grupos e campos)",
+        "tags": [
+          "form-structure"
+        ]
+      }
+    },
+    "/api/v1/form-templates/{templateId}/sections/{sectionId}/groups": {
+      "post": {
+        "operationId": "FormStructureController_createGroup",
+        "parameters": [
+          {
+            "name": "templateId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sectionId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateFormGroupDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormStructureDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados ou regra de campo inválidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sem permissão ou não é o dono",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Modelo, seção, grupo ou campo não encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Modelo fora de Rascunho, chave duplicada ou campo em uso por outro",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Prontuário indisponível",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Adicionar grupo (subseção) a uma seção",
+        "tags": [
+          "form-structure"
+        ]
+      }
+    },
+    "/api/v1/form-templates/{templateId}/sections/{sectionId}/groups/reorder": {
+      "put": {
+        "operationId": "FormStructureController_reorderGroups",
+        "parameters": [
+          {
+            "name": "templateId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sectionId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReorderDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormStructureDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados ou regra de campo inválidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sem permissão ou não é o dono",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Modelo, seção, grupo ou campo não encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Modelo fora de Rascunho, chave duplicada ou campo em uso por outro",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Prontuário indisponível",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Reordenar grupos de uma seção",
+        "tags": [
+          "form-structure"
+        ]
+      }
+    },
+    "/api/v1/form-templates/{templateId}/groups/{groupId}": {
+      "put": {
+        "operationId": "FormStructureController_updateGroup",
+        "parameters": [
+          {
+            "name": "templateId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "groupId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateFormGroupDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormStructureDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados ou regra de campo inválidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sem permissão ou não é o dono",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Modelo, seção, grupo ou campo não encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Modelo fora de Rascunho, chave duplicada ou campo em uso por outro",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Prontuário indisponível",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Editar grupo",
+        "tags": [
+          "form-structure"
+        ]
+      },
+      "delete": {
+        "operationId": "FormStructureController_removeGroup",
+        "parameters": [
+          {
+            "name": "templateId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "groupId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormStructureDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados ou regra de campo inválidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sem permissão ou não é o dono",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Modelo, seção, grupo ou campo não encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Modelo fora de Rascunho, chave duplicada ou campo em uso por outro",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Prontuário indisponível",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Excluir grupo (com campos)",
+        "tags": [
+          "form-structure"
+        ]
+      }
+    },
+    "/api/v1/form-templates/{templateId}/fields": {
+      "post": {
+        "description": "Valida tipo, opções, obrigatoriedade, condições e cálculo automático.",
+        "operationId": "FormStructureController_createField",
+        "parameters": [
+          {
+            "name": "templateId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateFormFieldDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormStructureDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados ou regra de campo inválidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sem permissão ou não é o dono",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Modelo, seção, grupo ou campo não encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Modelo fora de Rascunho, chave duplicada ou campo em uso por outro",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Prontuário indisponível",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Adicionar campo",
+        "tags": [
+          "form-structure"
+        ]
+      }
+    },
+    "/api/v1/form-templates/{templateId}/fields/reorder": {
+      "put": {
+        "operationId": "FormStructureController_reorderFields",
+        "parameters": [
+          {
+            "name": "templateId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReorderFieldsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormStructureDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados ou regra de campo inválidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sem permissão ou não é o dono",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Modelo, seção, grupo ou campo não encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Modelo fora de Rascunho, chave duplicada ou campo em uso por outro",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Prontuário indisponível",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Reordenar campos de uma seção/grupo",
+        "tags": [
+          "form-structure"
+        ]
+      }
+    },
+    "/api/v1/form-templates/{templateId}/fields/{fieldId}": {
+      "put": {
+        "operationId": "FormStructureController_updateField",
+        "parameters": [
+          {
+            "name": "templateId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fieldId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateFormFieldDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormStructureDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados ou regra de campo inválidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sem permissão ou não é o dono",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Modelo, seção, grupo ou campo não encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Modelo fora de Rascunho, chave duplicada ou campo em uso por outro",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Prontuário indisponível",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Configurar campo (rótulo, obrigatoriedade, regras, cálculo, posição)",
+        "tags": [
+          "form-structure"
+        ]
+      },
+      "delete": {
+        "operationId": "FormStructureController_removeField",
+        "parameters": [
+          {
+            "name": "templateId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fieldId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormStructureDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados ou regra de campo inválidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sem permissão ou não é o dono",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Modelo, seção, grupo ou campo não encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Modelo fora de Rascunho, chave duplicada ou campo em uso por outro",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Prontuário indisponível",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Excluir campo",
+        "tags": [
+          "form-structure"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "AppStart API",
+    "description": "API REST do AppStart - Especificação OpenAPI 3.0",
+    "version": "1.0.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "cookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "appstart_session",
+        "description": "Cookie de sessão local opaca"
+      }
+    },
+    "schemas": {
+      "ProblemDetailsDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "example": "https://appstart.example/problems/validation-error"
+          },
+          "title": {
+            "type": "string",
+            "example": "Dados inválidos"
+          },
+          "status": {
+            "type": "number",
+            "example": 400
+          },
+          "detail": {
+            "type": "string",
+            "example": "Um ou mais campos precisam ser corrigidos."
+          },
+          "instance": {
+            "type": "string",
+            "example": "/api/v1/users"
+          },
+          "code": {
+            "type": "string",
+            "example": "VALIDATION_ERROR"
+          },
+          "requestId": {
+            "type": "string",
+            "example": "01J..."
+          },
+          "timestamp": {
+            "type": "string",
+            "example": "2026-08-31T20:00:00.000Z"
+          },
+          "errors": {
+            "type": "object",
+            "example": {
+              "email": [
+                "Informe um e-mail válido."
+              ]
+            },
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "required": [
+          "type",
+          "title",
+          "status",
+          "detail",
+          "instance",
+          "code",
+          "timestamp"
+        ]
+      },
+      "LoginRequestDto": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "example": "admin@appstart.internal",
+            "description": "E-mail ou nome de usuário cadastrado"
+          },
+          "password": {
+            "type": "string",
+            "example": "Admin123!",
+            "description": "Senha de acesso"
+          }
+        },
+        "required": [
+          "username",
+          "password"
+        ]
+      },
+      "SafeUserProfileDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "name": {
+            "type": "string",
+            "example": "Ada Lovelace"
+          },
+          "email": {
+            "type": "string",
+            "example": "ada@example.com"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "USER",
+              "ADMIN"
+            ],
+            "example": "USER"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "email",
+          "role"
+        ]
+      },
+      "AuthMeResponseDto": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/SafeUserProfileDto"
+          }
+        },
+        "required": [
+          "user"
+        ]
+      },
+      "ManagedUserDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "name": {
+            "type": "string",
+            "example": "Ada Lovelace"
+          },
+          "email": {
+            "type": "string",
+            "example": "ada@example.com"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "USER",
+              "ADMIN"
+            ],
+            "example": "USER"
+          },
+          "isActive": {
+            "type": "boolean",
+            "example": true
+          },
+          "createdAt": {
+            "type": "string",
+            "example": "2026-08-31T20:00:00.000Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "example": "2026-08-31T20:00:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "email",
+          "role",
+          "isActive",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "PaginationMetaDto": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "number",
+            "example": 1
+          },
+          "pageSize": {
+            "type": "number",
+            "example": 20
+          },
+          "total": {
+            "type": "number",
+            "example": 100
+          },
+          "totalPages": {
+            "type": "number",
+            "example": 5
+          }
+        },
+        "required": [
+          "page",
+          "pageSize",
+          "total",
+          "totalPages"
+        ]
+      },
+      "PaginatedUsersResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ManagedUserDto"
+            }
+          },
+          "meta": {
+            "$ref": "#/components/schemas/PaginationMetaDto"
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ]
+      },
+      "CreateUserDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Ada Lovelace",
+            "minLength": 2,
+            "maxLength": 120
+          },
+          "email": {
+            "type": "string",
+            "example": "ada@example.com",
+            "maxLength": 254
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "USER",
+              "ADMIN"
+            ],
+            "example": "USER"
+          }
+        },
+        "required": [
+          "name",
+          "email",
+          "role"
+        ]
+      },
+      "UpdateSelfUserDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Ada Lovelace",
+            "minLength": 2,
+            "maxLength": 120
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "UpdateUserDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Ada Lovelace",
+            "minLength": 2,
+            "maxLength": 120
+          },
+          "email": {
+            "type": "string",
+            "example": "ada@example.com",
+            "maxLength": 254
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "USER",
+              "ADMIN"
+            ],
+            "example": "ADMIN"
+          }
+        }
+      },
+      "SetUserStatusDto": {
+        "type": "object",
+        "properties": {
+          "isActive": {
+            "type": "boolean",
+            "example": true
+          }
+        },
+        "required": [
+          "isActive"
+        ]
+      },
+      "CreateTaskDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Título da tarefa",
+            "example": "Configurar monitoramento de produção",
+            "minLength": 3,
+            "maxLength": 150
+          },
+          "description": {
+            "type": "string",
+            "description": "Descrição detalhada da tarefa",
+            "example": "Definir alertas para uso de CPU e memória.",
+            "maxLength": 1000
+          },
+          "priority": {
+            "type": "string",
+            "description": "Prioridade da tarefa",
+            "enum": [
+              "LOW",
+              "MEDIUM",
+              "HIGH",
+              "URGENT"
+            ],
+            "default": "MEDIUM"
+          },
+          "dueDate": {
+            "type": "string",
+            "description": "Data de entrega limite (ISO 8601)",
+            "example": "2026-12-31T23:59:59.000Z"
+          },
+          "categoryId": {
+            "type": "string",
+            "description": "Identificador da categoria da tarefa",
+            "example": "c0eebc99-9c0b-4ef8-bb6d-6bb9bd380a33"
+          }
+        },
+        "required": [
+          "title"
+        ]
+      },
+      "TaskOwnerDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Identificador único do proprietário",
+            "example": "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11"
+          },
+          "name": {
+            "type": "string",
+            "description": "Nome do proprietário",
+            "example": "Ada Lovelace"
+          },
+          "email": {
+            "type": "string",
+            "description": "E-mail do proprietário",
+            "example": "ada@example.com"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "email"
+        ]
+      },
+      "TaskCategorySummaryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Identificador da categoria",
+            "example": "c0eebc99-9c0b-4ef8-bb6d-6bb9bd380a33"
+          },
+          "name": {
+            "type": "string",
+            "description": "Nome da categoria",
+            "example": "Trabalho"
+          },
+          "color": {
+            "type": "string",
+            "description": "Cor da categoria (#RRGGBB)",
+            "example": "#3B82F6"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "color"
+        ]
+      },
+      "TaskDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Identificador único da tarefa",
+            "example": "b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a22"
+          },
+          "title": {
+            "type": "string",
+            "description": "Título da tarefa",
+            "example": "Configurar monitoramento"
+          },
+          "description": {
+            "type": "object",
+            "description": "Descrição da tarefa",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "description": "Status da tarefa",
+            "enum": [
+              "PENDING",
+              "IN_PROGRESS",
+              "COMPLETED",
+              "CANCELLED"
+            ],
+            "example": "PENDING"
+          },
+          "priority": {
+            "type": "string",
+            "description": "Prioridade da tarefa",
+            "enum": [
+              "LOW",
+              "MEDIUM",
+              "HIGH",
+              "URGENT"
+            ],
+            "example": "MEDIUM"
+          },
+          "dueDate": {
+            "type": "object",
+            "description": "Data limite de entrega",
+            "nullable": true
+          },
+          "ownerId": {
+            "type": "string",
+            "description": "Identificador do usuário proprietário",
+            "example": "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11"
+          },
+          "owner": {
+            "description": "Dados resumidos do proprietário",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TaskOwnerDto"
+              }
+            ]
+          },
+          "categoryId": {
+            "type": "string",
+            "description": "Identificador da categoria",
+            "nullable": true
+          },
+          "category": {
+            "description": "Dados resumidos da categoria",
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TaskCategorySummaryDto"
+              }
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Data de criação"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "Data de última atualização"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "status",
+          "priority",
+          "ownerId",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "PaginatedTasksResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "description": "Lista de tarefas paginadas",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TaskDto"
+            }
+          },
+          "meta": {
+            "description": "Metadados de paginação",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaginationMetaDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ]
+      },
+      "UpdateTaskDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Título da tarefa",
+            "example": "Configurar monitoramento avançado",
+            "minLength": 3,
+            "maxLength": 150
+          },
+          "description": {
+            "type": "string",
+            "description": "Descrição detalhada da tarefa",
+            "maxLength": 1000
+          },
+          "status": {
+            "type": "string",
+            "description": "Status atual da tarefa",
+            "enum": [
+              "PENDING",
+              "IN_PROGRESS",
+              "COMPLETED",
+              "CANCELLED"
+            ]
+          },
+          "priority": {
+            "type": "string",
+            "description": "Prioridade da tarefa",
+            "enum": [
+              "LOW",
+              "MEDIUM",
+              "HIGH",
+              "URGENT"
+            ]
+          },
+          "dueDate": {
+            "type": "string",
+            "description": "Data de entrega limite (ISO 8601)"
+          },
+          "categoryId": {
+            "type": "string",
+            "description": "Categoria da tarefa (envie null para remover)",
+            "nullable": true
+          }
+        }
+      },
+      "CreateCategoryDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Nome da categoria",
+            "example": "Trabalho",
+            "minLength": 2,
+            "maxLength": 50
+          },
+          "color": {
+            "type": "string",
+            "description": "Cor da categoria em hexadecimal (#RRGGBB)",
+            "example": "#3B82F6",
+            "default": "#3B82F6"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "CategoryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Identificador único da categoria",
+            "example": "c0eebc99-9c0b-4ef8-bb6d-6bb9bd380a33"
+          },
+          "name": {
+            "type": "string",
+            "description": "Nome da categoria",
+            "example": "Trabalho"
+          },
+          "color": {
+            "type": "string",
+            "description": "Cor da categoria (#RRGGBB)",
+            "example": "#3B82F6"
+          },
+          "ownerId": {
+            "type": "string",
+            "description": "Identificador do usuário proprietário",
+            "example": "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11"
+          },
+          "taskCount": {
+            "type": "number",
+            "description": "Quantidade de tarefas ativas nesta categoria",
+            "example": 3
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Data de criação"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "Data de última atualização"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "color",
+          "ownerId",
+          "taskCount",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "PaginatedCategoriesResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "description": "Lista de categorias paginadas",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CategoryDto"
+            }
+          },
+          "meta": {
+            "description": "Metadados de paginação",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaginationMetaDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ]
+      },
+      "UpdateCategoryDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Nome da categoria",
+            "example": "Pessoal",
+            "minLength": 2,
+            "maxLength": 50
+          },
+          "color": {
+            "type": "string",
+            "description": "Cor da categoria em hexadecimal (#RRGGBB)",
+            "example": "#10B981"
+          }
+        }
+      },
+      "FormRole": {
+        "type": "string",
+        "enum": [
+          "CONFIGURADOR",
+          "PREENCHIMENTO",
+          "SUPERVISAO"
+        ]
+      },
+      "FormPermission": {
+        "type": "string",
+        "enum": [
+          "TEMPLATE_CREATE",
+          "TEMPLATE_READ_OWN",
+          "TEMPLATE_READ_ALL",
+          "TEMPLATE_UPDATE",
+          "TEMPLATE_DELETE",
+          "TEMPLATE_REVIEW",
+          "PRONTUARIO_READ"
+        ]
+      },
+      "FormAccessProfileDto": {
+        "type": "object",
+        "properties": {
+          "roles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FormRole"
+            }
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FormPermission"
+            }
+          },
+          "mock": {
+            "type": "boolean",
+            "description": "true enquanto os perfis vierem do mock de primeira fase",
+            "example": true
+          }
+        },
+        "required": [
+          "roles",
+          "permissions",
+          "mock"
+        ]
+      },
+      "ProntuarioStatusDto": {
+        "type": "object",
+        "properties": {
+          "available": {
+            "type": "boolean",
+            "example": true
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "mock",
+              "live"
+            ],
+            "example": "mock"
+          }
+        },
+        "required": [
+          "available",
+          "mode"
+        ]
+      },
+      "PacienteResumoDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "pac-001"
+          },
+          "nome": {
+            "type": "string",
+            "example": "Maria de Exemplo"
+          },
+          "dataNascimento": {
+            "type": "string",
+            "example": "1985-03-12",
+            "description": "Data de nascimento (YYYY-MM-DD)"
+          },
+          "numeroProntuario": {
+            "type": "string",
+            "example": "PRT-0001"
+          }
+        },
+        "required": [
+          "id",
+          "nome",
+          "dataNascimento",
+          "numeroProntuario"
+        ]
+      },
+      "ClinicalArea": {
+        "type": "string",
+        "enum": [
+          "ENFERMAGEM",
+          "NUTRICAO",
+          "CLINICA_MEDICA",
+          "FISIOTERAPIA",
+          "ODONTOLOGIA",
+          "PSICOLOGIA",
+          "OBSTETRICIA"
+        ]
+      },
+      "FormTemplateComplexity": {
+        "type": "string",
+        "enum": [
+          "SIMPLES",
+          "COMPLEXA",
+          "LONGITUDINAL"
+        ]
+      },
+      "CreateFormTemplateDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Nome do modelo de ficha",
+            "example": "Avaliação Clínico-Nutricional",
+            "minLength": 3,
+            "maxLength": 120
+          },
+          "description": {
+            "type": "string",
+            "description": "Descrição do modelo",
+            "example": "Ficha de primeira consulta",
+            "maxLength": 500
+          },
+          "clinicalArea": {
+            "example": "NUTRICAO",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ClinicalArea"
+              }
+            ]
+          },
+          "sigtapCode": {
+            "type": "string",
+            "description": "Código do procedimento SIGTAP (00.00.00.000-0)",
+            "example": "03.01.01.004-8"
+          },
+          "responsibleName": {
+            "type": "string",
+            "description": "Profissional responsável pelo modelo",
+            "example": "Prof. Ricardo Menezes",
+            "minLength": 3,
+            "maxLength": 120
+          },
+          "complexity": {
+            "default": "SIMPLES",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FormTemplateComplexity"
+              }
+            ]
+          },
+          "prontuarioComponents": {
+            "description": "Componentes do Prontuário usados pelo modelo (CÓDIGO@versão)",
+            "example": [
+              "PRT.IDENT@3.1",
+              "PRT.ANTRO@1.2"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "name",
+          "clinicalArea",
+          "sigtapCode",
+          "responsibleName"
+        ]
+      },
+      "FormTemplateStatus": {
+        "type": "string",
+        "enum": [
+          "RASCUNHO",
+          "EM_REVISAO",
+          "APROVADO",
+          "PUBLICADO",
+          "SUSPENSO",
+          "INATIVO"
+        ]
+      },
+      "FormTemplateDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "c0eebc99-9c0b-4ef8-bb6d-6bb9bd380a33"
+          },
+          "code": {
+            "type": "string",
+            "description": "Código sequencial do modelo",
+            "example": "FC-0027"
+          },
+          "name": {
+            "type": "string",
+            "example": "Avaliação Clínico-Nutricional Metabólica"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true,
+            "example": "Ficha de primeira consulta"
+          },
+          "clinicalArea": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ClinicalArea"
+              }
+            ]
+          },
+          "sigtapCode": {
+            "type": "string",
+            "example": "03.01.01.004-8"
+          },
+          "responsibleName": {
+            "type": "string",
+            "example": "Prof. Ricardo Menezes"
+          },
+          "complexity": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FormTemplateComplexity"
+              }
+            ]
+          },
+          "version": {
+            "type": "string",
+            "example": "1.0.0"
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FormTemplateStatus"
+              }
+            ]
+          },
+          "prontuarioComponents": {
+            "example": [
+              "PRT.IDENT@3.1"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "derivedFromId": {
+            "type": "string",
+            "nullable": true,
+            "description": "Modelo de origem (derivação)"
+          },
+          "ownerId": {
+            "type": "string",
+            "description": "Usuário que criou o modelo",
+            "example": "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Data de criação"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "Data de última atualização"
+          }
+        },
+        "required": [
+          "id",
+          "code",
+          "name",
+          "description",
+          "clinicalArea",
+          "sigtapCode",
+          "responsibleName",
+          "complexity",
+          "version",
+          "status",
+          "prontuarioComponents",
+          "derivedFromId",
+          "ownerId",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "FormTemplateStatusCountsDto": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "number"
+          },
+          "RASCUNHO": {
+            "type": "number"
+          },
+          "EM_REVISAO": {
+            "type": "number"
+          },
+          "APROVADO": {
+            "type": "number"
+          },
+          "PUBLICADO": {
+            "type": "number"
+          },
+          "SUSPENSO": {
+            "type": "number"
+          },
+          "INATIVO": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "total",
+          "RASCUNHO",
+          "EM_REVISAO",
+          "APROVADO",
+          "PUBLICADO",
+          "SUSPENSO",
+          "INATIVO"
+        ]
+      },
+      "PaginatedFormTemplatesResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FormTemplateDto"
+            }
+          },
+          "meta": {
+            "$ref": "#/components/schemas/PaginationMetaDto"
+          },
+          "statusCounts": {
+            "description": "Contagem por status (respeita os demais filtros)",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FormTemplateStatusCountsDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "meta",
+          "statusCounts"
+        ]
+      },
+      "FormTemplateEventKind": {
+        "type": "string",
+        "enum": [
+          "CRIACAO",
+          "EDICAO",
+          "TRANSICAO",
+          "DERIVACAO"
+        ]
+      },
+      "FormTemplateVersionDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string",
+            "example": "1.0.1"
+          },
+          "kind": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FormTemplateEventKind"
+              }
+            ]
+          },
+          "fromStatus": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FormTemplateStatus"
+              }
+            ]
+          },
+          "toStatus": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FormTemplateStatus"
+              }
+            ]
+          },
+          "note": {
+            "type": "string",
+            "example": "Modelo criado"
+          },
+          "authorId": {
+            "type": "string"
+          },
+          "authorName": {
+            "type": "string",
+            "example": "Fernanda Costa"
+          },
+          "createdAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "version",
+          "kind",
+          "fromStatus",
+          "toStatus",
+          "note",
+          "authorId",
+          "authorName",
+          "createdAt"
+        ]
+      },
+      "FormTemplateDetailDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "c0eebc99-9c0b-4ef8-bb6d-6bb9bd380a33"
+          },
+          "code": {
+            "type": "string",
+            "description": "Código sequencial do modelo",
+            "example": "FC-0027"
+          },
+          "name": {
+            "type": "string",
+            "example": "Avaliação Clínico-Nutricional Metabólica"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true,
+            "example": "Ficha de primeira consulta"
+          },
+          "clinicalArea": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ClinicalArea"
+              }
+            ]
+          },
+          "sigtapCode": {
+            "type": "string",
+            "example": "03.01.01.004-8"
+          },
+          "responsibleName": {
+            "type": "string",
+            "example": "Prof. Ricardo Menezes"
+          },
+          "complexity": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FormTemplateComplexity"
+              }
+            ]
+          },
+          "version": {
+            "type": "string",
+            "example": "1.0.0"
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FormTemplateStatus"
+              }
+            ]
+          },
+          "prontuarioComponents": {
+            "example": [
+              "PRT.IDENT@3.1"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "derivedFromId": {
+            "type": "string",
+            "nullable": true,
+            "description": "Modelo de origem (derivação)"
+          },
+          "ownerId": {
+            "type": "string",
+            "description": "Usuário que criou o modelo",
+            "example": "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Data de criação"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "Data de última atualização"
+          },
+          "derivedFromCode": {
+            "type": "string",
+            "nullable": true,
+            "description": "Código do modelo de origem",
+            "example": "FC-0012"
+          },
+          "versions": {
+            "description": "Histórico de versões (mais recente primeiro)",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FormTemplateVersionDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "code",
+          "name",
+          "description",
+          "clinicalArea",
+          "sigtapCode",
+          "responsibleName",
+          "complexity",
+          "version",
+          "status",
+          "prontuarioComponents",
+          "derivedFromId",
+          "ownerId",
+          "createdAt",
+          "updatedAt",
+          "derivedFromCode",
+          "versions"
+        ]
+      },
+      "UpdateFormTemplateDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Nome do modelo de ficha",
+            "minLength": 3,
+            "maxLength": 120
+          },
+          "description": {
+            "type": "string",
+            "description": "Descrição do modelo; envie null para limpar",
+            "maxLength": 500,
+            "nullable": true
+          },
+          "clinicalArea": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ClinicalArea"
+              }
+            ]
+          },
+          "sigtapCode": {
+            "type": "string",
+            "description": "Código do procedimento SIGTAP (00.00.00.000-0)"
+          },
+          "responsibleName": {
+            "type": "string",
+            "description": "Profissional responsável pelo modelo"
+          },
+          "complexity": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FormTemplateComplexity"
+              }
+            ]
+          },
+          "prontuarioComponents": {
+            "description": "Componentes do Prontuário (CÓDIGO@versão)",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "versionNote": {
+            "type": "string",
+            "description": "Nota da versão (o que mudou)",
+            "maxLength": 300,
+            "example": "Ajuste no SIGTAP"
+          }
+        }
+      },
+      "FormTemplateAction": {
+        "type": "string",
+        "enum": [
+          "ENVIAR_REVISAO",
+          "DEVOLVER",
+          "APROVAR",
+          "PUBLICAR",
+          "SUSPENDER",
+          "REATIVAR",
+          "INATIVAR"
+        ]
+      },
+      "FormTemplateTransitionDto": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FormTemplateAction"
+              }
+            ]
+          },
+          "note": {
+            "type": "string",
+            "description": "Justificativa (obrigatória para devolver, suspender e inativar)",
+            "maxLength": 300
+          }
+        },
+        "required": [
+          "action"
+        ]
+      },
+      "DeriveFormTemplateDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Nome do novo modelo derivado",
+            "minLength": 3,
+            "maxLength": 120
+          },
+          "responsibleName": {
+            "type": "string",
+            "description": "Responsável pelo novo modelo (padrão: o do modelo de origem)"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "FormFieldType": {
+        "type": "string",
+        "enum": [
+          "SHORT_TEXT",
+          "LONG_TEXT",
+          "NUMBER",
+          "DATE",
+          "TIME",
+          "YES_NO",
+          "SELECT_SINGLE",
+          "SELECT_MULTIPLE",
+          "SCALE",
+          "ATTACHMENT",
+          "AUDIO",
+          "LAB_RESULTS",
+          "SIGNATURE",
+          "CALCULATED"
+        ]
+      },
+      "FieldOptionDto": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "string",
+            "example": "tipo_2"
+          },
+          "label": {
+            "type": "string",
+            "example": "Tipo 2"
+          }
+        },
+        "required": [
+          "value",
+          "label"
+        ]
+      },
+      "FieldConfigDto": {
+        "type": "object",
+        "properties": {
+          "min": {
+            "type": "number",
+            "description": "Mínimo (Número/Escala)"
+          },
+          "max": {
+            "type": "number",
+            "description": "Máximo (Número/Escala)"
+          },
+          "step": {
+            "type": "number",
+            "description": "Passo (Número/Escala)"
+          },
+          "maxLength": {
+            "type": "number",
+            "description": "Tamanho máximo (textos)"
+          }
+        }
+      },
+      "ConditionOperator": {
+        "type": "string",
+        "enum": [
+          "EQUALS",
+          "NOT_EQUALS",
+          "CONTAINS",
+          "GREATER_THAN",
+          "LESS_THAN",
+          "IS_FILLED"
+        ]
+      },
+      "FieldConditionDto": {
+        "type": "object",
+        "properties": {
+          "fieldKey": {
+            "type": "string",
+            "description": "Chave do campo observado",
+            "example": "tabagismo"
+          },
+          "operator": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ConditionOperator"
+              }
+            ]
+          },
+          "value": {
+            "type": "string",
+            "description": "Valor comparado (dispensado em IS_FILLED)",
+            "example": "fumante"
+          }
+        },
+        "required": [
+          "fieldKey",
+          "operator"
+        ]
+      },
+      "CalculationFormula": {
+        "type": "string",
+        "enum": [
+          "AGE_YEARS",
+          "BMI",
+          "SUM",
+          "AVERAGE"
+        ]
+      },
+      "FieldCalculationDto": {
+        "type": "object",
+        "properties": {
+          "formula": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CalculationFormula"
+              }
+            ]
+          },
+          "sourceKeys": {
+            "description": "Chaves dos campos de origem, na ordem da fórmula",
+            "example": [
+              "peso",
+              "altura"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "decimals": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 4,
+            "default": 1
+          }
+        },
+        "required": [
+          "formula",
+          "sourceKeys"
+        ]
+      },
+      "FormFieldDefinitionDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "sectionId": {
+            "type": "string"
+          },
+          "groupId": {
+            "type": "string",
+            "nullable": true
+          },
+          "key": {
+            "type": "string",
+            "example": "peso"
+          },
+          "label": {
+            "type": "string",
+            "example": "Peso"
+          },
+          "type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FormFieldType"
+              }
+            ]
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "helpText": {
+            "type": "string",
+            "nullable": true
+          },
+          "placeholder": {
+            "type": "string",
+            "nullable": true
+          },
+          "unit": {
+            "type": "string",
+            "nullable": true
+          },
+          "prontuarioCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FieldOptionDto"
+            }
+          },
+          "config": {
+            "$ref": "#/components/schemas/FieldConfigDto"
+          },
+          "visibleWhen": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FieldConditionDto"
+              }
+            ]
+          },
+          "requiredWhen": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FieldConditionDto"
+              }
+            ]
+          },
+          "calculation": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FieldCalculationDto"
+              }
+            ]
+          },
+          "position": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "sectionId",
+          "groupId",
+          "key",
+          "label",
+          "type",
+          "required",
+          "helpText",
+          "placeholder",
+          "unit",
+          "prontuarioCode",
+          "options",
+          "config",
+          "visibleWhen",
+          "requiredWhen",
+          "calculation",
+          "position"
+        ]
+      },
+      "FormGroupDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "sectionId": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "prontuarioComponent": {
+            "type": "string",
+            "nullable": true,
+            "example": "PRT.ANTRO@1.2"
+          },
+          "position": {
+            "type": "number"
+          },
+          "fields": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FormFieldDefinitionDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "sectionId",
+          "title",
+          "description",
+          "prontuarioComponent",
+          "position",
+          "fields"
+        ]
+      },
+      "FormSectionDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "position": {
+            "type": "number"
+          },
+          "fields": {
+            "description": "Campos soltos (fora de grupos)",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FormFieldDefinitionDto"
+            }
+          },
+          "groups": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FormGroupDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "description",
+          "position",
+          "fields",
+          "groups"
+        ]
+      },
+      "FormStructureDto": {
+        "type": "object",
+        "properties": {
+          "templateId": {
+            "type": "string"
+          },
+          "editable": {
+            "type": "boolean",
+            "description": "false quando o modelo não está em Rascunho (estrutura congelada)"
+          },
+          "sections": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FormSectionDto"
+            }
+          },
+          "fieldCount": {
+            "type": "number"
+          },
+          "requiredCount": {
+            "type": "number"
+          },
+          "conditionalCount": {
+            "type": "number"
+          },
+          "calculationCount": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "templateId",
+          "editable",
+          "sections",
+          "fieldCount",
+          "requiredCount",
+          "conditionalCount",
+          "calculationCount"
+        ]
+      },
+      "CreateFormSectionDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "Anamnese",
+            "maxLength": 120
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 500
+          }
+        },
+        "required": [
+          "title"
+        ]
+      },
+      "ReorderDto": {
+        "type": "object",
+        "properties": {
+          "orderedIds": {
+            "description": "Todos os ids do nível, na nova ordem",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "orderedIds"
+        ]
+      },
+      "UpdateFormSectionDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 120
+          },
+          "description": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 500
+          }
+        }
+      },
+      "CreateFormGroupDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "Anamnese",
+            "maxLength": 120
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "prontuarioComponent": {
+            "type": "string",
+            "description": "Componente do Prontuário (CÓDIGO@versão)",
+            "example": "PRT.ANTRO@1.2"
+          }
+        },
+        "required": [
+          "title"
+        ]
+      },
+      "UpdateFormGroupDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 120
+          },
+          "description": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 500
+          },
+          "prontuarioComponent": {
+            "type": "string",
+            "nullable": true,
+            "description": "Envie null para desvincular"
+          }
+        }
+      },
+      "CreateFormFieldDto": {
+        "type": "object",
+        "properties": {
+          "helpText": {
+            "type": "string",
+            "nullable": true,
+            "description": "Texto de ajuda exibido abaixo do campo",
+            "maxLength": 300
+          },
+          "placeholder": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 120
+          },
+          "unit": {
+            "type": "string",
+            "nullable": true,
+            "description": "Unidade (kg, cm, cig/dia...)",
+            "maxLength": 20
+          },
+          "prontuarioCode": {
+            "type": "string",
+            "nullable": true,
+            "description": "Código no Prontuário",
+            "example": "PRT.ANTRO.PESO"
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FieldOptionDto"
+            }
+          },
+          "config": {
+            "$ref": "#/components/schemas/FieldConfigDto"
+          },
+          "visibleWhen": {
+            "nullable": true,
+            "description": "Exibir somente quando…",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FieldConditionDto"
+              }
+            ]
+          },
+          "requiredWhen": {
+            "nullable": true,
+            "description": "Obrigatório se…",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FieldConditionDto"
+              }
+            ]
+          },
+          "calculation": {
+            "nullable": true,
+            "description": "Somente para CALCULATED",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FieldCalculationDto"
+              }
+            ]
+          },
+          "sectionId": {
+            "type": "string"
+          },
+          "groupId": {
+            "type": "string",
+            "nullable": true,
+            "description": "null = campo solto na seção"
+          },
+          "label": {
+            "type": "string",
+            "example": "Peso",
+            "maxLength": 120
+          },
+          "key": {
+            "type": "string",
+            "description": "Chave técnica única no modelo (minúsculas, números e _)",
+            "example": "peso"
+          },
+          "type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FormFieldType"
+              }
+            ]
+          },
+          "required": {
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "required": [
+          "sectionId",
+          "label",
+          "key",
+          "type"
+        ]
+      },
+      "ReorderFieldsDto": {
+        "type": "object",
+        "properties": {
+          "orderedIds": {
+            "description": "Todos os ids do nível, na nova ordem",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "sectionId": {
+            "type": "string"
+          },
+          "groupId": {
+            "type": "string",
+            "nullable": true,
+            "description": "null = campos soltos da seção"
+          }
+        },
+        "required": [
+          "orderedIds",
+          "sectionId"
+        ]
+      },
+      "UpdateFormFieldDto": {
+        "type": "object",
+        "properties": {
+          "helpText": {
+            "type": "string",
+            "nullable": true,
+            "description": "Texto de ajuda exibido abaixo do campo",
+            "maxLength": 300
+          },
+          "placeholder": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 120
+          },
+          "unit": {
+            "type": "string",
+            "nullable": true,
+            "description": "Unidade (kg, cm, cig/dia...)",
+            "maxLength": 20
+          },
+          "prontuarioCode": {
+            "type": "string",
+            "nullable": true,
+            "description": "Código no Prontuário",
+            "example": "PRT.ANTRO.PESO"
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FieldOptionDto"
+            }
+          },
+          "config": {
+            "$ref": "#/components/schemas/FieldConfigDto"
+          },
+          "visibleWhen": {
+            "nullable": true,
+            "description": "Exibir somente quando…",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FieldConditionDto"
+              }
+            ]
+          },
+          "requiredWhen": {
+            "nullable": true,
+            "description": "Obrigatório se…",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FieldConditionDto"
+              }
+            ]
+          },
+          "calculation": {
+            "nullable": true,
+            "description": "Somente para CALCULATED",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FieldCalculationDto"
+              }
+            ]
+          },
+          "sectionId": {
+            "type": "string",
+            "description": "Mover para outra seção"
+          },
+          "groupId": {
+            "type": "string",
+            "nullable": true
+          },
+          "label": {
+            "type": "string",
+            "maxLength": 120
+          },
+          "key": {
+            "type": "string"
+          },
+          "type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FormFieldType"
+              }
+            ]
+          },
+          "required": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}
