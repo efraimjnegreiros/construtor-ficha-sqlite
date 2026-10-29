@@ -1,0 +1,40 @@
+{
+  "name": "clinica",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Aplicação derivada de clinica baseada no template AppStart.",
+  "engines": {
+    "node": ">=20.19"
+  },
+  "scripts": {
+    "postinstall": "npm run prisma:generate --workspace apps/api",
+    "check:runtime": "node scripts/check-runtime.mjs",
+    "check:env": "node scripts/check-env.mjs",
+    "setup": "node scripts/setup.mjs",
+    "dev": "node scripts/dev.mjs",
+    "db:up": "node scripts/db-up.mjs",
+    "db:down": "node scripts/db-down.mjs",
+    "auth:render": "node scripts/keycloak-render-realm.mjs",
+    "auth:up": "node scripts/auth-up.mjs",
+    "auth:down": "node scripts/auth-down.mjs",
+    "db:migrate": "node scripts/db-migrate.mjs",
+    "db:check": "node scripts/db-check-migrations.mjs",
+    "db:deploy": "node scripts/db-deploy.mjs",
+    "db:seed": "node scripts/db-seed.mjs",
+    "db:studio": "node scripts/db-studio.mjs",
+    "api:dev": "npm run dev --workspace apps/api",
+    "api:generate": "node scripts/generate-api.mjs",
+    "api:check": "node scripts/check-api-divergence.mjs",
+    "web:dev": "npm run dev --workspace apps/web",
+    "test": "npm test --workspace apps/api && npm test --workspace apps/web",
+    "docs:check": "node scripts/check-docs-integrity.mjs",
+    "check:all": "npm test && npm run build --workspace apps/web && npm run api:check && npm run docs:check"
+  },
+  "devDependencies": {
+    "orval": "^8.27.0",
+    "tsx": "^4.23.13"
+  },
+  "workspaces": [
+    "apps/*"
+  ]
+}

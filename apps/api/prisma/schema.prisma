@@ -1,0 +1,292 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+model UserProfile {
+  id             String         @id @default(uuid())
+  keycloakUserId String         @unique
+  name           String
+  email          String         @unique
+  roleSnapshot   UserRole       @default(USER)
+  isActiveLocal  Boolean        @default(true)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  sessions       Session[]
+  tasks          Task[]
+  // [CATEGORIA] Relação inversa: um usuário pode ter várias categorias próprias.
+  taskCategories TaskCategory[]
+  // Modelos de ficha criados por este usuário (Construtor de Fichas).
+  formTemplates  FormTemplate[]
+
+  @@map("user_profiles")
+}
+
+model Session {
+  id              String      @id @default(uuid())
+  tokenHash       String      @unique
+  userProfileId   String
+  keycloakSubject String
+  expiresAt       DateTime
+  createdAt       DateTime    @default(now())
+  lastUsedAt      DateTime    @default(now())
+  userProfile     UserProfile @relation(fields: [userProfileId], references: [id], onDelete: Cascade)
+
+  @@index([userProfileId])
+  @@index([expiresAt])
+  @@map("sessions")
+}
+
+model Task {
+  id          String        @id @default(uuid())
+  title       String
+  description String?
+  status      TaskStatus    @default(PENDING)
+  priority    TaskPriority  @default(MEDIUM)
+  dueDate     DateTime?
+  // [CATEGORIA] Chave estrangeira OPCIONAL: a tarefa pode não ter categoria.
+  categoryId  String?
+  ownerId     String
+  deletedAt   DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  owner       UserProfile   @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  // [CATEGORIA] Se a categoria for apagada fisicamente do banco, a tarefa fica sem categoria (SetNull).
+  category    TaskCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  @@index([ownerId])
+  @@index([deletedAt])
+  @@index([status])
+  // [CATEGORIA] Índice para acelerar o filtro "tarefas da categoria X".
+  @@index([categoryId])
+  @@map("tasks")
+}
+
+// [CATEGORIA] Nova entidade seguindo exatamente o mesmo padrão de Task:
+// UUID, ownership (ownerId), soft delete (deletedAt) e timestamps.
+model TaskCategory {
+  id        String      @id @default(uuid())
+  name      String
+  // Cor em hexadecimal (#RRGGBB) usada para pintar o badge na tela de tarefas.
+  color     String      @default("#3B82F6")
+  ownerId   String
+  deletedAt DateTime?
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  owner     UserProfile @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  tasks     Task[]
+
+  @@index([ownerId])
+  @@index([deletedAt])
+  @@map("task_categories")
+}
+
+// Construtor de Fichas — status do ciclo de vida de um modelo (governança, ver protótipo).
+// Rascunho → Em revisão → Aprovado → Publicado ⇄ Suspenso; qualquer status (exceto Inativo) → Inativo.
+enum FormTemplateStatus {
+  RASCUNHO
+  EM_REVISAO
+  APROVADO
+  PUBLICADO
+  SUSPENSO
+  INATIVO
+}
+
+// Área clínica responsável pelo modelo.
+enum ClinicalArea {
+  ENFERMAGEM
+  NUTRICAO
+  CLINICA_MEDICA
+  FISIOTERAPIA
+  ODONTOLOGIA
+  PSICOLOGIA
+  OBSTETRICIA
+}
+
+// Complexidade do modelo (tag exibida na governança).
+enum FormTemplateComplexity {
+  SIMPLES
+  COMPLEXA
+  LONGITUDINAL
+}
+
+// Tipo de evento registrado no histórico de versões do modelo.
+enum FormTemplateEventKind {
+  CRIACAO
+  EDICAO
+  TRANSICAO
+  DERIVACAO
+}
+
+// Construtor de Fichas — cadastro da ficha (modelo) com os dados de governança.
+// Segue o padrão de governança: UUID, ownerId (criador), soft delete e timestamps.
+model FormTemplate {
+  id                   String                 @id @default(uuid())
+  // Código sequencial legível (FC-0001), gerado pela API e nunca reaproveitado.
+  code                 String                 @unique
+  name                 String
+  description          String?
+  clinicalArea         ClinicalArea
+  // Código do procedimento na tabela SIGTAP (formato 00.00.00.000-0).
+  sigtapCode           String
+  // Nome do profissional responsável técnico pelo modelo.
+  responsibleName      String
+  complexity           FormTemplateComplexity @default(SIMPLES)
+  // Versão semântica (MAJOR.MINOR.PATCH). Cada edição em rascunho incrementa o PATCH.
+  version              String                 @default("1.0.0")
+  status               FormTemplateStatus     @default(RASCUNHO)
+  // Componentes do Prontuário usados (ex.: ["PRT.IDENT@3.1"]); JSON porque SQLite não tem arrays.
+  prontuarioComponents String                 @default("[]")
+  // Modelo de origem quando criado via "Derivar de modelo existente".
+  derivedFromId        String?
+  ownerId              String
+  deletedAt            DateTime?
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
+  owner                UserProfile            @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  derivedFrom          FormTemplate?          @relation("FormTemplateDerivation", fields: [derivedFromId], references: [id], onDelete: SetNull)
+  derivations          FormTemplate[]         @relation("FormTemplateDerivation")
+  versions             FormTemplateVersion[]
+  sections             FormSection[]
+  fields               FormField[]
+
+  @@index([ownerId])
+  @@index([deletedAt])
+  @@index([status])
+  @@index([clinicalArea])
+  @@map("form_templates")
+}
+
+// Histórico de versões/eventos do modelo (data, nota da mudança e autor).
+model FormTemplateVersion {
+  id         String                @id @default(uuid())
+  templateId String
+  version    String
+  kind       FormTemplateEventKind
+  fromStatus FormTemplateStatus?
+  toStatus   FormTemplateStatus?
+  note       String
+  authorId   String
+  authorName String
+  createdAt  DateTime              @default(now())
+  template   FormTemplate          @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@index([templateId])
+  @@map("form_template_versions")
+}
+
+// Tipos de componente da paleta do construtor (protótipo).
+enum FormFieldType {
+  SHORT_TEXT
+  LONG_TEXT
+  NUMBER
+  DATE
+  TIME
+  YES_NO
+  SELECT_SINGLE
+  SELECT_MULTIPLE
+  SCALE
+  ATTACHMENT
+  AUDIO
+  LAB_RESULTS
+  SIGNATURE
+  CALCULATED
+}
+
+// Seção da ficha (ex.: Identificação, Anamnese). Ordenada por `position`.
+model FormSection {
+  id          String       @id @default(uuid())
+  templateId  String
+  title       String
+  description String?
+  position    Int
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  template    FormTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  groups      FormGroup[]
+  fields      FormField[]
+
+  @@index([templateId])
+  @@map("form_sections")
+}
+
+// Grupo (subseção) dentro de uma seção; pode estar vinculado a um componente do Prontuário.
+model FormGroup {
+  id                  String      @id @default(uuid())
+  sectionId           String
+  title               String
+  description         String?
+  // Componente do Prontuário que o grupo representa (ex.: PRT.ANTRO@1.2).
+  prontuarioComponent String?
+  position            Int
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+  section             FormSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  fields              FormField[]
+
+  @@index([sectionId])
+  @@map("form_groups")
+}
+
+// Campo da ficha. Regras lógicas e cálculo ficam em JSON (SQLite não tem tipos compostos).
+model FormField {
+  id             String        @id @default(uuid())
+  templateId     String
+  sectionId      String
+  // null = campo solto na seção (fora de grupos).
+  groupId        String?
+  // Identificador técnico único no modelo (ex.: peso, data_nascimento); usado em condições e cálculos.
+  key            String
+  label          String
+  type           FormFieldType
+  required       Boolean       @default(false)
+  helpText       String?
+  placeholder    String?
+  unit           String?
+  // Código do dado no Prontuário (ex.: PRT.ANTRO.PESO).
+  prontuarioCode String?
+  // [{ "value": "...", "label": "..." }] para seleções.
+  options        String        @default("[]")
+  // { min, max, step, maxLength, decimals } conforme o tipo.
+  config         String        @default("{}")
+  // Condição de exibição: { fieldKey, operator, value }.
+  visibleWhen    String?
+  // "Obrigatório se…": { fieldKey, operator, value }.
+  requiredWhen   String?
+  // Cálculo automático: { formula, sourceKeys, decimals }.
+  calculation    String?
+  position       Int
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  template       FormTemplate  @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  section        FormSection   @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  group          FormGroup?    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([templateId, key])
+  @@index([sectionId])
+  @@index([groupId])
+  @@map("form_fields")
+}

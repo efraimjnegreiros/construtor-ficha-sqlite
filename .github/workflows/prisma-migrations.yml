@@ -1,0 +1,36 @@
+name: Prisma migrations
+
+on:
+  pull_request:
+    paths:
+      - "apps/api/prisma/**"
+      - "scripts/db-check-migrations.mjs"
+      - "apps/api/package.json"
+      - "package-lock.json"
+      - ".github/workflows/prisma-migrations.yml"
+  push:
+    branches: [main]
+    paths:
+      - "apps/api/prisma/**"
+      - "scripts/db-check-migrations.mjs"
+      - "apps/api/package.json"
+      - "package-lock.json"
+      - ".github/workflows/prisma-migrations.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      # SQLite: sem serviço externo. O `db:check` cria um banco shadow temporário sozinho.
+      DATABASE_URL: file:./ci.db
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - run: npm ci
+      - run: npm run db:check

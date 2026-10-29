@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  /* Roxo da marca no lugar do azul/índigo padrão */
+  --color-blue-50:  #F3E8FA;  /* tom claro derivado do roxo (não está na paleta) */
+  --color-blue-100: #E9E9EC;  /* cinza claro */
+  --color-blue-300: #3FBFD1;  /* ciano claro: realces no modo escuro */
+  --color-blue-400: #3FBFD1;
+  --color-blue-500: #69139D;  /* roxo principal */
+  --color-blue-600: #69139D;  /* botões, links, ícones */
+  --color-blue-700: #4D0C74;  /* hover: roxo profundo */
+  --color-blue-800: #4D0C74;
+  --color-blue-900: #331549;  /* roxo escuro */
+
+  --color-indigo-400: #3FBFD1;
+  --color-indigo-600: #69139D;
+
+  /* Neutros */
+  --color-slate-50:  #FFFFFF;
+  --color-slate-100: #E9E9EC;
+  --color-slate-200: #E9E9EC;
+  --color-slate-500: #58595B;
+  --color-slate-600: #58595B;
+  --color-slate-700: #58595B;
+  --color-slate-800: #331549; /* fundos escuros (cards, banners) */
+  --color-slate-900: #331549;
+}
+
+@layer base {
+ :root {
+  --primary: 277 78% 34%;            /* #69139D */
+  --primary-foreground: 0 0% 100%;
+  --ring: 277 78% 34%;
+  --foreground: 277 57% 18%;         /* #331549 para títulos/texto forte */
+  --muted-foreground: 220 2% 35%;    /* #58595B */
+  --secondary: 240 7% 92%;           /* #E9E9EC */
+  --accent: 240 7% 92%;
+  --border: 240 7% 92%;
+  --input: 240 7% 92%;
+}
+.dark {
+  --primary: 187 61% 53%;            /* #3FBFD1: o roxo escuro não tem contraste no fundo escuro */
+  --primary-foreground: 277 57% 18%;
+  --ring: 187 61% 53%;
+  --background: 277 57% 11%;
+  --card: 277 57% 14%;
+}
+}
+
+body {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+}

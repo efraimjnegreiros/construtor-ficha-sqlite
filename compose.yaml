@@ -1,0 +1,24 @@
+# Docker é opcional e só serve para o Keycloak (AUTH_MODE=keycloak + USE_DOCKER=true).
+# O banco da aplicação é um arquivo SQLite (DATABASE_URL), sem contêiner.
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    container_name: clinica-keycloak
+    restart: unless-stopped
+    command:
+      - start-dev
+      - --import-realm
+    environment:
+      # Banco embutido (H2 em arquivo) — suficiente para desenvolvimento.
+      KC_DB: dev-file
+      KC_HEALTH_ENABLED: "true"
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USER}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+    ports:
+      - "${KEYCLOAK_PORT:-8080}:8080"
+    volumes:
+      - keycloak_data:/opt/keycloak/data/h2
+      - ./infra/keycloak/realm-import:/opt/keycloak/data/import:ro,Z
+
+volumes:
+  keycloak_data:
